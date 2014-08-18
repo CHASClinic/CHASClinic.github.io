@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html>
+<title>CHAS Clinic Map</title>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <!-- Import Onemap/google maps API -->
+    <script type='text/JavaScript' src='js/onemap.js'></script>
+
+
+    <!-- Import jQuery -->
+    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+
+
+    <!-- Import third party CSS and plugins -->
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/alertify.default.css">
+    <link rel="stylesheet" type="text/css" href="css/alertify.core.css">
+
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/alertify.min.js"></script>
+
+    <!-- Import javascripts -->
+    <script type="text/javascript" src="js/onload.js"></script>
+    <script type="text/javascript" src="js/mashup.js"></script>
+    <script type="text/javascript" src="js/setWidth.js"></script>
+    <script type="text/javascript" src="js/getCurrentLocation.js"></script>
+    <script type="text/javascript" src="js/search.js"></script>
+    <script type="text/javascript" src="js/routing.js"></script>
+
+    <style type="text/css">
+    .btn.btn-success {
+        color: #ffffff;
+        background-color: #1bd1d1;
+        background-image: linear-gradient(to bottom, #1bd1d1, #1bd1d1);
+        border-color: #1bd1d1 #1bd1d1 #1bd1d1;
+    }
+    .btn.btn-success:hover {
+        color: #ffffff;
+        background-color: #1bd1d1;
+        background-image: linear-gradient(to bottom, #1bd1d1, #1bd1d1);
+        border-color: #1bd1d1 #1bd1d1 #1bd1d1;
+    }
+    .black {
+        background: url(img/black-trans.png);
+        color: #fff;
+        padding: 4px 12px 10px 10px;
+        margin: 24px 0px;
+    }
+    /*black transparent background*/
+    .scrollable-menu {
+        height: auto;
+        max-height: 400px;
+        overflow-y: scroll;
+    }
+    #originListBody .scrollable-menu {
+        height: auto;
+        max-height: 200px;
+        overflow-y: scroll;
+    }
+    .modal-dialog {
+        width: 400px;
+        margin: 110px 0px 0px 140px;
+    }
+    /*multilevel dropdown*/
+    .dropdown-submenu {
+        position: relative;
+    }
+    .dropdown-submenu>.dropdown-menu {
+        top: 0;
+        left: 100%;
+        margin-top: -6px;
+        margin-left: -1px;
+        -webkit-border-radius: 0 6px 6px 6px;
+        -moz-border-radius: 0 6px 6px;
+        border-radius: 0 6px 6px 6px;
+    }
+    .dropdown-submenu:hover>.dropdown-menu {
+        display: block;
+    }
+    .dropdown-submenu>a:after {
+        display: block;
+        content: " ";
+        float: right;
+        width: 0;
+        height: 0;
+        border-color: transparent;
+        border-style: solid;
+        border-width: 5px 0 5px 5px;
+        border-left-color: black;
+        margin-top: 5px;
+        margin-right: -10px;
+    }
+    .dropdown-submenu:hover>a:after {
+        border-left-color: grey;
+    }
+    .dropdown-submenu.pull-left {
+        float: none;
+    }
+    .dropdown-submenu.pull-left>.dropdown-menu {
+        left: -100%;
+        margin-left: 10px;
+        -webkit-border-radius: 6px 0 6px 6px;
+        -moz-border-radius: 6px 0 6px 6px;
+        border-radius: 6px 0 6px 6px;
+    }
+    </style>
+
+</head>
+
+<body style="overflow: hidden;">
+
+    <div id="map-canvas" style='position:absolute;visibility:hidden;z-index:-1;'></div>
+    <div id="divMain" style='position:absolute;z-index:1;'>
+    </div>
+    <div id="zoomBar" style="margin: 35px 0px 0px 10px;position:absolute;z-index:2;">
+        <button type="button" class="btn btn-danger btn-md" onclick="map.setLevel(map.getLevel()+1)">
+            <span class="glyphicon glyphicon-plus"></span>
+        </button>
+        <button type="button" class="btn btn-danger btn-md" style="margin:75px 0px 0px -44px;" onclick="map.setLevel(map.getLevel()-1)">
+            <span class="glyphicon glyphicon-minus"></span>
+        </button>
+        <button type="button" class="btn btn-primary btn-md" style="margin:150px 0px 0px -44px;" onclick="getLocation();">
+            <span class="glyphicon glyphicon-map-marker"></span>
+        </button>
+    </div>
+    <nav id="navbar" class="navbar navbar-default" style="margin:0px 2px 0px 2px;height:60px;position:absolute;z-index:3;">
+        <div class="container-fluid">
+            <ul class="nav nav-pills" style="margin:10px 0px 0px 0px;">
+                <li class="dropdown">
+                    <a id="dLabel" role="button" data-toggle="dropdown" data-target="#">
+                        <span>Select Region
+                            <b class="caret"></b>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+                        <li>
+                            <a class="themeButton" type="butoon" href="#">East</a>
+                        </li>
+                        <li>
+                            <a class="themeButton" type="butoon" href="#">West</a>
+                        </li>
+                        <li>
+                            <a class="themeButton" type="butoon" href="#">North</a>
+                        </li>
+                        <li>
+                            <a class="themeButton" type="butoon" href="#">North-east</a>
+                        </li>
+						<li>
+                            <a class="themeButton" type="butoon" href="#">Central</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <input type="text" id="txtSearchText" class="form-control" placeholder="Enter an address to display nearby clinics" style="width:100px">
+                </li>
+                <li>
+                    <button type="button" id="searchButton" onclick="GetSearchData();" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </button>&nbsp
+                </li>
+                <li>
+                    <button id="hideTheme" type="button" class="btn btn-success btn-md" onclick="hideThemes();">Clear</button>
+                </li>
+                <li class="dropdown pull-right" id="searchResultList">
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div id="chevron">
+        <div id="hideChevron" style="margin:-40px 0px 0px 0px;position:absolute;z-index:2;">
+            <button type="button" class="btn btn-md btn-primary " onclick="slideUp();" style="margin-top:100px;">
+                <span class="glyphicon glyphicon-chevron-up"></span>
+            </button>
+        </div>
+        <div id="showChevron" style="margin:0px 0px 0px 0px;position:absolute;z-index:2;">
+            <button type="button" onclick="slideDown();" class="btn btn-md btn-primary">
+                <span class="glyphicon glyphicon-chevron-down"></span>
+            </button>
+        </div>
+    </div>
+    <!-- Display address infomation -->
+    <div style="margin:10vh -5vw 0vh 60vw;position:absolute;">
+        <div id="introDiv" class="alert bg-primary" style="position:relative;z-index:2;max-width:500px;">
+            <button type="button" class="close" onclick="$('#introDiv').hide();">&times;</button>
+            <div id="intro"></div>
+            <br>
+            <div id="address"></div>
+        </div>
+    </div>
+    <!-- Modal for routing -->
+    <div class="modal fade" id="routing">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Get Routes</h4>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs">
+                        <li id="publicList" class="active">
+                            <a href="javascript:switchToPublic();">
+                                <strong>Public Transport</strong>
+                            </a>
+                        </li>
+                        <li id="driveList">
+                            <a href="javascript:switchToDriving();">
+                                <strong>Driving</strong>
+                            </a>
+                        </li>
+                    </ul>
+                    <input type="hidden" id="destination" value="">
+                    <label>Starting Point (Address or Postal Code)</label>
+                    <input class="form-control" id="origin" placeholder="Enter Origin" required>
+
+                    <table id="driving" class="hide" style="padding-top:10px;">
+                        <tr>
+                            <td>
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="erp">Avoid ERP</label>
+                                </div>
+                            </td>
+                            <td style="width:100px;"></td>
+                            <td>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="drivingOptions" id="fastest" value="Fastest" checked>Fastest Way
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="drivingOptions" id="shortest" value="Shortest">Shortest Way
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table id="public" class="show" style="padding-top:10px;">
+                        <tr>
+                            <td>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="transportTools" id="mrtPublic" checked>Bus and MRT
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="transportTools" id="busPublic">Only bus
+                                    </label>
+                                </div>
+                            </td>
+                            <td style="width:100px;"></td>
+                            <td>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="publicOptions" id="fastestPublic" checked>Fastest Way
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="publicOptions" id="cheapestPublic">Cheapest Way
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="Submit" id="routePublicSubmit" class="btn btn-danger" data-dismiss="modal">Submit</button>
+                    <button type="Submit" id="routeSubmit" class="btn btn-primary hide" data-dismiss="modal">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="originList">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" id="originListClose" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="">Select your origin</h4>
+                </div>
+                <div class="modal-body" id="originListBody" style="height:210px">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="hide" id="originListButton" data-toggle='modal' data-target='#originList'></button>
+    <input type="hidden" id="originName" value="">
+    <input type="hidden" id="destinationName" value="">
+
+</body>
+
+</html>
